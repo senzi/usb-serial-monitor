@@ -1,0 +1,8 @@
+{
+    "baudrate": "115200",
+    "data_bits": "8",
+    "stop_bits": "1",
+    "parity": "NONE",
+    "flow_control": "NONE",
+    "putty_path": "putty.exe"
+}
