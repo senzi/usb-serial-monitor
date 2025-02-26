@@ -6,12 +6,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 PyInstaller.__main__.run([
     'main.py',
-    '--name=USBMonitor',
+    '--name=USB串口监测器',
     '--windowed',
-    '--onefile',
-    f'--icon={os.path.join(current_dir, "icon.png")}',
+    '--icon=icon.png',
     '--add-binary=putty.exe;.',
     '--add-data=config.json;.',
     '--noconfirm',
-    '--clean'
+    '--clean',
+    '--noconsole',
+    '--onefile'
 ])

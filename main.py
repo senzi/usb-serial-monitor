@@ -6,7 +6,38 @@ import time
 from datetime import datetime
 import json
 import os
+import sys
 import subprocess
+import tempfile
+import atexit
+
+def get_putty_path():
+    """获取putty可执行文件的路径"""
+    try:
+        # 如果是打包后的环境
+        if getattr(sys, 'frozen', False):
+            # 创建临时目录
+            temp_dir = tempfile.gettempdir()
+            putty_path = os.path.join(temp_dir, 'putty.exe')
+            
+            # 如果临时目录中没有putty，就从打包的资源中提取
+            if not os.path.exists(putty_path):
+                # 从打包的资源中复制putty到临时目录
+                with open(os.path.join(sys._MEIPASS, 'putty.exe'), 'rb') as f:
+                    putty_data = f.read()
+                with open(putty_path, 'wb') as f:
+                    f.write(putty_data)
+            
+            # 注册程序退出时删除临时文件
+            atexit.register(lambda: os.remove(putty_path) if os.path.exists(putty_path) else None)
+            
+            return putty_path
+        else:
+            # 开发环境直接使用当前目录的putty
+            return os.path.join(os.path.dirname(__file__), 'putty.exe')
+    except Exception as e:
+        print(f"Error extracting putty: {e}")
+        return 'putty.exe'  # fallback到默认值
 
 class SerialConfig:
     def __init__(self, parent):
@@ -34,7 +65,7 @@ class SerialConfig:
         ttk.Label(putty_frame, text="程序路径:").pack(anchor=tk.W)
         self.putty_path = ttk.Entry(putty_frame)
         self.putty_path.pack(fill=tk.X, pady=(2, 0))
-        self.putty_path.insert(0, "putty.exe")
+        self.putty_path.insert(0, get_putty_path())
         
         # 底部按钮框架
         button_frame = ttk.Frame(main_frame)
@@ -110,8 +141,10 @@ class SerialConfig:
                 self.param_widgets["校验位:"].set(config.get("parity", "NONE"))
                 self.param_widgets["流控制:"].set(config.get("flow_control", "NONE"))
                 self.putty_path.delete(0, tk.END)
-                self.putty_path.insert(0, config.get("putty_path", "putty.exe"))
+                self.putty_path.insert(0, get_putty_path())
         except FileNotFoundError:
+            self.putty_path.delete(0, tk.END)
+            self.putty_path.insert(0, get_putty_path())
             pass  # 使用默认值
 
 class USBMonitor:
